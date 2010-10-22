@@ -1113,6 +1113,26 @@ class PageObject(DictionaryObject):
         return None
 
     ##
+    # Returns the page's thumbnail information, or None if it doesn't exist.
+    # Returns a tuple of  width, height, colorspace, bits, data
+    #
+    # Example usage:
+    #    >>> import Image
+    #    >>> t = page.getThumb()
+    #    >>> if t and t.colorspace == '/DeviceRGB':
+    #    ...     i = Image.fromstring("RGB", (t.width, t.height), t.getData())
+    def getThumb(self):
+      if not self.has_key("/Thumb"):
+        return None
+      obj = self["/Thumb"].getObject()
+      if isinstance(obj, IndirectObject):
+        obj = self.getObject(obj)
+      retval = Thumb()
+      retval.update(obj)
+      retval.setData(obj.getData())
+      return retval
+
+    ##
     # Merges the content streams of two pages into one.  Resource references
     # (i.e. fonts) are maintained from both pages.  The mediabox/cropbox/etc
     # of this page are not altered.  The parameter page's content stream will
@@ -1691,6 +1711,29 @@ class Destination(DictionaryObject):
     # Read-only property accessing the bottom vertical coordinate.
     # @return A number, or None if not available.
     bottom = property(lambda self: self.get("/Bottom", None))
+
+##
+# A class representing the page's thumbnail.
+class Thumb(DecodedStreamObject):
+    ##
+    # Read-only property accessing the thumb's width.
+    # @return An int
+    width = property(lambda self: self.get("/Width"))
+
+    ##
+    # Read-only property accessing the thumb's height.
+    # @return An int
+    height = property(lambda self: self.get("/Height"))
+
+    ##
+    # Read-only property accessing the thumb's color space.
+    # @return A string
+    colorspace = property(lambda self: self.get("/ColorSpace"))
+
+    ##
+    # Read-only property accessing the thumb's bits per component.
+    # @return An int
+    bits_per_component = property(lambda self: self.get("/BitsPerComponent"))
 
 def convertToInt(d, size):
     if size > 8:
